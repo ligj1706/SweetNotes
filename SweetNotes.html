@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>红薯备忘</title>
+    <style>
+        :root {
+            --primary: #007AFF;
+            --header-bg: #fffcf3; /* 淡黄色背景 */
+            --card: #FFFFFF;
+            --text: #1D1D1F;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background: #F5F5F7;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: calc(100vh - 32px);
+        }
+
+        /* 输入区优化 */
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+            border: none;
+            border-radius: 12px;
+            background: var(--card);
+            font-size: 17px;
+            line-height: 1.6;
+            resize: none;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        /* 预览卡高级样式 */
+        #preview {
+            background: var(--card);
+            border-radius: 12px;
+            aspect-ratio: 3/4;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 优雅标题栏 */
+        .memo-header {
+            padding: 20px 24px;
+            background: var(--header-bg);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .memo-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0;
+            letter-spacing: -0.4px;
+        }
+
+        .header-icons {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+            opacity: 0.8;
+        }
+
+        .icon {
+            font-size: 20px;
+            transform: translateY(1px);
+        }
+
+        /* 内容区增强 */
+        .memo-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            textarea {
+                height: 60vh;
+            }
+        }
+
+        /* 下载按钮优化 */
+        #downloadBtn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.24);
+            transition: opacity 0.2s;
+        }
+
+        #downloadBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <textarea id="input" placeholder="# 今日重点\n\n- [ ] 项目会议\n- [ ] 方案提交\n- [ ] 客户跟进\n\n**重要提醒**\n> 截止时间18:00"></textarea>
+        <div id="preview"></div>
+    </div>
+
+    <button id="downloadBtn" onclick="download()" disabled>下载备忘录</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script>
+        // 图标系统
+        const ICONS = {
+            edit: '✍️',
+            calendar: '📅'
+        }
+
+        // 自动生成逻辑
+        function updatePreview() {
+            const content = document.getElementById('input').value;
+            const hasContent = content.trim().length > 0;
+
+            document.getElementById('preview').innerHTML = `
+                <div class="memo-header">
+                    <h2 class="memo-title">📝 备忘录</h2>
+                    <div class="header-icons">
+                        <span class="icon">${ICONS.edit}</span>
+                        <span class="icon">${ICONS.calendar}</span>
+                    </div>
+                </div>
+                <div class="memo-content">
+                    ${hasContent ? marked.parse(content) : '<p style="color:#86868b;text-align:center">输入内容自动预览</p>'}
+                </div>
+            `;
+
+            document.getElementById('downloadBtn').disabled = !hasContent;
+        }
+
+        // 下载功能
+        async function download() {
+            const preview = document.getElementById('preview');
+            
+            try {
+                const canvas = await html2canvas(preview, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                link.download = `Memo-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch (error) {
+                alert('生成失败，请稍后重试');
+            }
+        }
+
+        // 实时监听输入
+        document.getElementById('input').addEventListener('input', () => {
+            updatePreview();
+        });
+
+        // 初始化
+        updatePreview();
+    </script>
+</body>
+</html>
